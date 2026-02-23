@@ -40,35 +40,35 @@ EVICT_ARGS="--eviction_top_k $EVICT_TOPK --eviction_window $EVICT_WINDOW --evict
 
 echo ""
 echo "▶ [1/8] Exp1: Baseline"
-python3 exp1_baseline/run.py $COMMON_ARGS 2>&1 | tee "$OUTDIR/exp1_baseline.log"
+python3 experiments/exp1_baseline/run.py $COMMON_ARGS 2>&1 | tee "$OUTDIR/exp1_baseline.log"
 
 echo ""
 echo "▶ [2/8] Exp2: ToT"
-python3 exp2_tot/run.py $COMMON_ARGS --n_proposals 3 --depth 2 --mode bfs 2>&1 | tee "$OUTDIR/exp2_tot.log"
+python3 experiments/exp2_tot/run.py $COMMON_ARGS --n_proposals 3 --depth 2 --mode bfs 2>&1 | tee "$OUTDIR/exp2_tot.log"
 
 echo ""
 echo "▶ [3/8] Exp3: Multi-Agent Debate"
-python3 exp3_debate/run.py $COMMON_ARGS --n_rounds 3 2>&1 | tee "$OUTDIR/exp3_debate.log"
+python3 experiments/exp3_debate/run.py $COMMON_ARGS --n_rounds 3 2>&1 | tee "$OUTDIR/exp3_debate.log"
 
 echo ""
 echo "▶ [4/8] Exp4: MCTS"
-python3 exp4_mcts/run.py $COMMON_ARGS --n_iterations 20 --n_rollouts 3 --max_depth 3 --rollout_length 64 2>&1 | tee "$OUTDIR/exp4_mcts.log"
+python3 experiments/exp4_mcts/run.py $COMMON_ARGS --n_iterations 20 --n_rollouts 3 --max_depth 3 --rollout_length 64 2>&1 | tee "$OUTDIR/exp4_mcts.log"
 
 echo ""
 echo "▶ [5/8] Exp5: Baseline + Eviction"
-python3 exp5_baseline_eviction/run.py $COMMON_ARGS $EVICT_ARGS 2>&1 | tee "$OUTDIR/exp5_baseline_eviction.log"
+python3 experiments/exp5_baseline_eviction/run.py $COMMON_ARGS $EVICT_ARGS 2>&1 | tee "$OUTDIR/exp5_baseline_eviction.log"
 
 echo ""
 echo "▶ [6/8] Exp6: ToT + Eviction"
-python3 exp6_tot_eviction/run.py $COMMON_ARGS $EVICT_ARGS --n_proposals 3 --depth 2 --mode bfs 2>&1 | tee "$OUTDIR/exp6_tot_eviction.log"
+python3 experiments/exp6_tot_eviction/run.py $COMMON_ARGS $EVICT_ARGS --n_proposals 3 --depth 2 --mode bfs 2>&1 | tee "$OUTDIR/exp6_tot_eviction.log"
 
 echo ""
 echo "▶ [7/8] Exp7: Debate + Eviction"
-python3 exp7_debate_eviction/run.py $COMMON_ARGS $EVICT_ARGS --n_rounds 3 2>&1 | tee "$OUTDIR/exp7_debate_eviction.log"
+python3 experiments/exp7_debate_eviction/run.py $COMMON_ARGS $EVICT_ARGS --n_rounds 3 2>&1 | tee "$OUTDIR/exp7_debate_eviction.log"
 
 echo ""
 echo "▶ [8/8] Exp8: MCTS + Eviction"
-python3 exp8_mcts_eviction/run.py $COMMON_ARGS $EVICT_ARGS --n_iterations 20 --n_rollouts 3 --max_depth 3 --rollout_length 64 2>&1 | tee "$OUTDIR/exp8_mcts_eviction.log"
+python3 experiments/exp8_mcts_eviction/run.py $COMMON_ARGS $EVICT_ARGS --n_iterations 20 --n_rollouts 3 --max_depth 3 --rollout_length 64 2>&1 | tee "$OUTDIR/exp8_mcts_eviction.log"
 
 echo ""
 echo "═══════════════════════════════════════════════════"

@@ -3,7 +3,7 @@
 # profile_ncu.sh — ncu (Nsight Compute) attention 커널 프로파일링
 #
 # 사용법:
-#   bash scripts/profile_ncu.sh exp1_baseline/run.py [추가 인자...]
+#   bash scripts/profile_ncu.sh experiments/exp1_baseline/run.py [추가 인자...]
 #
 # 주의: ncu는 매우 느림 → gen_length를 작게 (16~32) 권장
 # ═══════════════════════════════════════════════════════════

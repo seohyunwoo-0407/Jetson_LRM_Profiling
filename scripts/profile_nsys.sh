@@ -3,8 +3,8 @@
 # profile_nsys.sh — nsys 프로파일링 (NVTX 타임라인 + CUDA 커널)
 #
 # 사용법:
-#   bash scripts/profile_nsys.sh exp1_baseline/run.py [추가 인자...]
-#   bash scripts/profile_nsys.sh exp5_baseline_eviction/run.py --eviction_top_k 128
+#   bash scripts/profile_nsys.sh experiments/exp1_baseline/run.py [추가 인자...]
+#   bash scripts/profile_nsys.sh experiments/exp5_baseline_eviction/run.py --eviction_top_k 128
 # ═══════════════════════════════════════════════════════════
 set -euo pipefail
 

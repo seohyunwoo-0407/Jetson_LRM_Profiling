@@ -4,15 +4,17 @@
 실험 4와 동일 로직 + eviction 강제 활성화.
 """
 import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, _PROJECT_ROOT)
+sys.path.insert(0, os.path.join(_PROJECT_ROOT, "experiments"))
 
 import torch
-from common.args import get_common_parser, setup_seed
-from common.model_loader import load_model_and_tokenizer
-from common.nvtx_utils import nvtx_run
-from common.profiling import TegrastatsLogger
-from common.metrics import MetricsCollector, LatencyTracker
-from common.kv_cache_eviction import HeavyHitterEvictionManager
+from src.args import get_common_parser, setup_seed
+from src.model_loader import load_model_and_tokenizer
+from src.nvtx_utils import nvtx_run
+from src.profiling import TegrastatsLogger
+from src.metrics import MetricsCollector, LatencyTracker
+from src.kv_cache_eviction import HeavyHitterEvictionManager
 
 from exp4_mcts.run import run_mcts, DEFAULT_PROBLEM
 

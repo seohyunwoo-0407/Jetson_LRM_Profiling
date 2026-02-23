@@ -4,48 +4,38 @@
 NVTX: RUN / ToT/PROPOSE / ToT/EVAL / ToT/SELECT / ToT/EXPAND + PREFILL / DECODE_STEP
 """
 import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, _PROJECT_ROOT)
+sys.path.insert(0, os.path.join(_PROJECT_ROOT, "experiments"))
 
 import torch
 from typing import List, Tuple
-from common.args import get_common_parser, setup_seed
-from common.model_loader import load_model_and_tokenizer
-from common.nvtx_utils import (nvtx_run, nvtx_tot_propose, nvtx_tot_eval,
+from src.args import get_common_parser, setup_seed
+from src.model_loader import load_model_and_tokenizer
+from src.nvtx_utils import (nvtx_run, nvtx_tot_propose, nvtx_tot_eval,
                                 nvtx_tot_select, nvtx_tot_expand)
-from common.profiling import TegrastatsLogger, collect_cuda_metrics
-from common.metrics import MetricsCollector, LatencyTracker
-from common.generation import generate_with_profiling
-from common.kv_cache_eviction import HeavyHitterEvictionManager
+from src.profiling import TegrastatsLogger, collect_cuda_metrics
+from src.metrics import MetricsCollector, LatencyTracker
+from src.generation import generate_with_profiling
+from src.kv_cache_eviction import HeavyHitterEvictionManager
 
 DEFAULT_PROBLEM = (
     "You are an expert mathematician and logician. Solve the following complex problem step by step, "
-    "showing all intermediate calculations and logical reasoning:
-
-"
+    "showing all intermediate calculations and logical reasoning.\n\n"
     "A company is planning to expand its operations across three cities: City A, City B, and City C. "
     "The initial investment required is $2.5 million. City A requires 40% of the total investment, "
-    "City B requires 35% of the remaining amount after City A's investment, and City C requires the rest.
-
-"
+    "City B requires 35% of the remaining amount after City A's investment, and City C requires the rest.\n\n"
     "Additionally, the company must account for operational costs: City A has monthly costs of $15,000, "
     "City B has monthly costs that are 20% higher than City A, and City C has monthly costs that are "
-    "the average of City A and City B combined.
-
-"
-    "Questions to answer:
-"
-    "1. Calculate the exact investment amount for each city.
-"
-    "2. Calculate the monthly operational costs for each city.
-"
+    "the average of City A and City B combined.\n\n"
+    "Questions to answer:\n"
+    "1. Calculate the exact investment amount for each city.\n"
+    "2. Calculate the monthly operational costs for each city.\n"
     "3. If the company expects to break even after 18 months of operation, what should be the minimum "
-    "monthly revenue per city?
-"
+    "monthly revenue per city?\n"
     "4. Considering that City B has a 15% higher revenue potential than City A, and City C has a "
     "revenue potential that is 80% of the average of City A and City B, determine the optimal "
-    "revenue distribution strategy.
-
-"
+    "revenue distribution strategy.\n\n"
     "Show all your work, explain each step clearly, and verify your calculations. Consider edge cases "
     "and potential risks in your analysis."
 )

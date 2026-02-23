@@ -3,7 +3,7 @@
 # sweep_eviction_params.sh — Eviction 파라미터 스윕 (top_k / window / freq)
 #
 # 사용법:
-#   bash scripts/sweep_eviction_params.sh exp5_baseline_eviction/run.py
+#   bash scripts/sweep_eviction_params.sh experiments/exp5_baseline_eviction/run.py
 # ═══════════════════════════════════════════════════════════
 set -euo pipefail
 

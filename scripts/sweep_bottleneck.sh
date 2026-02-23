@@ -6,8 +6,8 @@
 #       OOM / EMC 포화 / 성능 급락 지점을 찾음.
 #
 # 사용법:
-#   bash scripts/sweep_bottleneck.sh exp1_baseline/run.py
-#   bash scripts/sweep_bottleneck.sh exp5_baseline_eviction/run.py
+#   bash scripts/sweep_bottleneck.sh experiments/exp1_baseline/run.py
+#   bash scripts/sweep_bottleneck.sh experiments/exp5_baseline_eviction/run.py
 # ═══════════════════════════════════════════════════════════
 set -euo pipefail
 
