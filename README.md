@@ -65,6 +65,7 @@ python3 experiments/exp1_baseline/run.py \
     --gen_length 256 \
     --repeats 5 \
     --tegrastats
+    --tag kvtrace
 ```
 prefill_latency -> prefil 과정 걸리는 시간 (밀리초)
 
