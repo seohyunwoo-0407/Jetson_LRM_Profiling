@@ -144,8 +144,23 @@ def _calc_kv_bytes(past_key_values) -> int:
     if past_key_values is None:
         return 0
     total = 0
-    for k, v in past_key_values:
-        total += k.nelement() * k.element_size()
-        total += v.nelement() * v.element_size()
-    return total
 
+    import torch
+
+    for layer in past_key_values:
+        # layer가 바로 텐서인 경우 (드물지만)
+        if torch.is_tensor(layer):
+            tensors = [layer]
+        # 튜플 / 리스트인 경우: 안에 텐서 여러 개 들어 있음
+        elif isinstance(layer, (tuple, list)):
+            tensors = [t for t in layer if torch.is_tensor(t)]
+        # dict 형태인 경우 (일부 모델)
+        elif isinstance(layer, dict):
+            tensors = [t for t in layer.values() if torch.is_tensor(t)]
+        else:
+            continue
+
+        for t in tensors:
+            total += t.nelement() * t.element_size()
+
+    return total
