@@ -88,6 +88,30 @@ class HeavyHitterEvictionManager:
         self.step_count = 0
         self.stats_history = []
 
+    def _iter_kv_pairs(self, past_key_values):
+        """legacy tuple cache와 transformers DynamicCache를 모두 순회."""
+        if past_key_values is None:
+            return []
+
+        # transformers DynamicCache 계열
+        if hasattr(past_key_values, "key_cache") and hasattr(past_key_values, "value_cache"):
+            return list(zip(past_key_values.key_cache, past_key_values.value_cache))
+
+        pairs = []
+        if isinstance(past_key_values, (tuple, list)):
+            for layer in past_key_values:
+                if isinstance(layer, (tuple, list)) and len(layer) >= 2:
+                    pairs.append((layer[0], layer[1]))
+        return pairs
+
+    @staticmethod
+    def _kv_bytes_from_pairs(kv_pairs) -> int:
+        total = 0
+        for k, v in kv_pairs:
+            total += k.nelement() * k.element_size()
+            total += v.nelement() * v.element_size()
+        return total
+
     # ─────────────────────────────────────────────
     # 1) Attention Metric 수집
     # ─────────────────────────────────────────────
@@ -180,25 +204,32 @@ class HeavyHitterEvictionManager:
         self, past_key_values, keep_indices: torch.Tensor
     ) -> Tuple:
         """
-        past_key_values: tuple of (key, value) per layer
-           key/value shape: (batch, heads, seq_len, head_dim)
+        past_key_values: legacy tuple cache 또는 DynamicCache
         keep_indices: (num_keep,) — 유지할 시퀀스 인덱스
 
         Returns: new past_key_values (compacted)
         """
         with nvtx_evict_move():
             start = time.perf_counter()
-            new_past = []
-            for layer_kv in past_key_values:
-                k, v = layer_kv
+            kv_pairs = self._iter_kv_pairs(past_key_values)
+            new_pairs = []
+            for k, v in kv_pairs:
                 new_k = k[:, :, keep_indices, :]
                 new_v = v[:, :, keep_indices, :]
-                new_past.append((new_k, new_v))
+                new_pairs.append((new_k, new_v))
+
             # 누적 점수도 compaction
             if self.cumulative_scores is not None:
                 self.cumulative_scores = self.cumulative_scores[:, :, keep_indices]
             elapsed = (time.perf_counter() - start) * 1000
-        return tuple(new_past), elapsed
+
+        # DynamicCache면 내부 버퍼를 in-place 갱신하여 타입 유지
+        if hasattr(past_key_values, "key_cache") and hasattr(past_key_values, "value_cache"):
+            past_key_values.key_cache = [k for k, _ in new_pairs]
+            past_key_values.value_cache = [v for _, v in new_pairs]
+            return past_key_values, elapsed
+
+        return tuple(new_pairs), elapsed
 
     # ─────────────────────────────────────────────
     # 통합 인터페이스
@@ -216,13 +247,10 @@ class HeavyHitterEvictionManager:
         stats = EvictionStats()
 
         # KV cache 크기 측정
-        if past_key_values and len(past_key_values) > 0:
-            k0 = past_key_values[0][0]
-            seq_len = k0.shape[2]
-            stats.kv_bytes_before = sum(
-                k.nelement() * k.element_size() + v.nelement() * v.element_size()
-                for k, v in past_key_values
-            )
+        kv_pairs = self._iter_kv_pairs(past_key_values)
+        if kv_pairs:
+            seq_len = kv_pairs[0][0].shape[2]
+            stats.kv_bytes_before = self._kv_bytes_from_pairs(kv_pairs)
         else:
             seq_len = 0
             stats.kv_bytes_before = 0
@@ -256,11 +284,9 @@ class HeavyHitterEvictionManager:
 
         stats.evicted_count = seq_len - len(keep_indices)
         stats.kept_count = len(keep_indices)
-        if new_past and len(new_past) > 0:
-            stats.kv_bytes_after = sum(
-                k.nelement() * k.element_size() + v.nelement() * v.element_size()
-                for k, v in new_past
-            )
+        new_pairs = self._iter_kv_pairs(new_past)
+        if new_pairs:
+            stats.kv_bytes_after = self._kv_bytes_from_pairs(new_pairs)
         else:
             stats.kv_bytes_after = 0
 

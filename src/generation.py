@@ -37,6 +37,7 @@ def generate_with_profiling(
     device = input_ids.device
 
     need_attentions = eviction_mgr is not None
+    base_seq_len = attention_mask.shape[1]
 
     # ═══════════════════════════════════════════
     # PREFILL
@@ -80,8 +81,9 @@ def generate_with_profiling(
     for step in range(1, gen_length):
         with nvtx_decode_step(step):
             cur_input = next_token.unsqueeze(0)
+            cur_len = base_seq_len + step
             cur_mask = torch.ones(
-                1, past_key_values[0][0].shape[2] + 1,
+                1, cur_len,
                 dtype=torch.long, device=device
             )
 
@@ -143,24 +145,19 @@ def _sample_token(logits: torch.Tensor, temperature: float, do_sample: bool) -> 
 def _calc_kv_bytes(past_key_values) -> int:
     if past_key_values is None:
         return 0
+
+    # transformers DynamicCache 계열
+    if hasattr(past_key_values, "key_cache") and hasattr(past_key_values, "value_cache"):
+        total = 0
+        for k, v in zip(past_key_values.key_cache, past_key_values.value_cache):
+            total += k.nelement() * k.element_size()
+            total += v.nelement() * v.element_size()
+        return total
+
     total = 0
-
-    import torch
-
     for layer in past_key_values:
-        # layer가 바로 텐서인 경우 (드물지만)
-        if torch.is_tensor(layer):
-            tensors = [layer]
-        # 튜플 / 리스트인 경우: 안에 텐서 여러 개 들어 있음
-        elif isinstance(layer, (tuple, list)):
-            tensors = [t for t in layer if torch.is_tensor(t)]
-        # dict 형태인 경우 (일부 모델)
-        elif isinstance(layer, dict):
-            tensors = [t for t in layer.values() if torch.is_tensor(t)]
-        else:
-            continue
-
-        for t in tensors:
-            total += t.nelement() * t.element_size()
-
+        if isinstance(layer, (tuple, list)) and len(layer) >= 2:
+            k, v = layer[0], layer[1]
+            total += k.nelement() * k.element_size()
+            total += v.nelement() * v.element_size()
     return total
