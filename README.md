@@ -1,1 +1,88 @@
 # Jetson_LRM_Profiling
+Jetson_LRM_Profiling/
+├── common/                          # 공통 모듈
+│   ├── __init__.py
+│   ├── args.py                      # CLI 인자 파서 + 시드 고정
+│   ├── model_loader.py              # HF 모델/토크나이저 로드
+│   ├── nvtx_utils.py                # NVTX 마커 (scheme/eviction 단계별)
+│   ├── profiling.py                 # TegrastatsLogger + CUDA ProfilingContext
+│   ├── metrics.py                   # LatencyTracker + MetricsCollector (p50/p95/p99)
+│   ├── kv_cache_eviction.py         # H2O 스타일 KV Cache Eviction 엔진
+│   └── generation.py                # 수동 디코드 루프 (prefill/decode 분리 + eviction 주입)
+│
+├── exp1_baseline/run.py             # 실험1: 기본 generate()
+├── exp2_tot/run.py                  # 실험2: Tree of Thoughts (BFS/DFS)
+├── exp3_debate/run.py               # 실험3: Multi-Agent Debate (3에이전트+Judge)
+├── exp4_mcts/run.py                 # 실험4: Monte Carlo Tree Search
+├── exp5_baseline_eviction/run.py    # 실험5: Baseline + H2O Eviction
+├── exp6_tot_eviction/run.py         # 실험6: ToT + H2O Eviction
+├── exp7_debate_eviction/run.py      # 실험7: Debate + H2O Eviction
+├── exp8_mcts_eviction/run.py        # 실험8: MCTS + H2O Eviction
+│
+├── configs/default.yaml             # 기본 설정 + 스윕 범위
+├── scripts/
+│   ├── run_all.sh                   # 전체 8실험 순차 실행
+│   ├── profile_nsys.sh              # nsys 프로파일링 (NVTX 타임라인)
+│   ├── profile_ncu.sh               # ncu 프로파일링 (attention 커널 카운터)
+│   ├── sweep_bottleneck.sh          # CTX×GEN 붕괴 지점 스윕
+│   └── sweep_eviction_params.sh     # top_k×window×freq 스윕
+│
+├── results/                         # 결과 저장 디렉토리 (자동 생성)
+└── requirements.txt
+
+1. 환경 설치
+cd Jetson_LRM_Profiling
+pip install -r requirements.txt
+
+2. 단일 실험 실행
+python3 exp1_baseline/run.py --max_context 2048 --gen_length 256 --repeats 5 --tegrastats
+
+3. 전체 8실험 한번에 
+bash scripts/run_all.sh
+# 환경변수로 파라미터 조절:
+CTX=4096 GEN=512 REPEATS=3 bash scripts/run_all.sh
+
+4. nsys 프로파일링
+# Baseline
+bash scripts/profile_nsys.sh exp1_baseline/run.py
+# MCTS + Eviction
+bash scripts/profile_nsys.sh exp8_mcts_eviction/run.py --eviction_top_k 128 --eviction_window 32
+
+5. ncu 프로파일링 (attention 커널)
+CTX=512 GEN=16 bash scripts/profile_ncu.sh exp1_baseline/run.py
+
+6. tegrastats 단독 로깅
+sudo tegrastats --interval 100 --logfile results/tegrastats_manual.log &
+# 실험 후 kill
+
+7. 붕괴 지점 스윕
+bash scripts/sweep_bottleneck.sh exp1_baseline/run.py            # baseline
+bash scripts/sweep_bottleneck.sh exp5_baseline_eviction/run.py   # eviction
+
+8. Eviction 파라미터 스윕
+bash scripts/sweep_eviction_params.sh exp5_baseline_eviction/run.py
+
+📊 NVTX 마커 구조 (nsys 타임라인에서 보이는 것)
+실험	NVTX 구간
+공통	RUN → PREFILL → DECODE_STEP_N
+ToT: 	ToT/PROPOSE → ToT/EVAL → ToT/SELECT → ToT/EXPAND
+Debate:	Debate/AGENT_A_GENERATOR → Debate/AGENT_B_CRITIC → Debate/AGENT_C_VERIFIER → Debate/JUDGE
+MCTS: 	MCTS/SELECT → MCTS/EXPAND → MCTS/ROLLOUT_N → MCTS/BACKPROP
+Eviction:	EVICT/ATTN_METRIC_COLLECT → EVICT/SCORE_UPDATE → EVICT/EVICT_DECISION → EVICT/EVICT_MOVE
+
+📈 측정 지표 (JSON 자동 저장)
+카테고리	지표
+Prefill	prefill_latency_ms
+Decode	decode_p50_ms, decode_p95_ms, decode_p99_ms, tokens_per_sec
+KV Cache	kv_bytes (스텝별), peak_kv_bytes, keep_ratio
+Eviction 오버헤드	collect_ms, score_update_ms, decision_ms, move_ms
+HW (tegrastats)	RAM/lfb, EMC, GR3D, 전력, 온도, 클럭
+
+🔍 병목 판정 체크리스트
+한계	로그/카운터 패턴	확인 방법
+RAM/lfb 고갈	lfb → 0~1x4MB, RAM used ≈ total	tegrastats ram_used_mb ≈ ram_total_mb
+EMC 대역폭 포화	EMC_FREQ ≥ 95%	tegrastats emc_freq, ncu dram_throughput
+memcpy/compaction 지배	eviction move_ms > decode latency의 30%+	JSON의 eviction_move_ms_mean
+DVFS/Thermal throttle	클럭 하락 + 온도 > 90°C + decode tail(p99) 급증	tegrastats GPU_temp, gr3d_freq 하락
+OOM	CUDA OOM / 프로세스 kill	sweep의 STATUS=FAIL 로그
+커널 stall	ncu stall_memory_dependency > 50%	ncu report의 stall breakdown

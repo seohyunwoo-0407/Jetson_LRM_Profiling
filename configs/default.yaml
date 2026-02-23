@@ -1,0 +1,64 @@
+# ═══════════════════════════════════════════════════════════
+# Jetson LRM Profiling — Default Configuration
+# ═══════════════════════════════════════════════════════════
+
+# 모델
+model:
+  name: "ibm-granite/granite-3.1-3b-a800m-instruct"
+  dtype: "float16"
+  device: "cuda"
+
+# 생성 기본값
+generation:
+  max_context: 2048
+  gen_length: 256
+  temperature: 0.7
+  do_sample: true
+
+# 실험 제어
+experiment:
+  seed: 42
+  warmup: 2
+  repeats: 5
+
+# Eviction 기본값 (exp5~8에서 사용)
+eviction:
+  top_k: 256
+  window: 64
+  freq: 1
+
+# 프로파일링
+profiling:
+  tegrastats_interval_ms: 100
+  output_dir: "results"
+
+# ── Scheme-specific 기본값 ──
+tot:
+  n_proposals: 3
+  depth: 2
+  mode: "bfs"
+
+debate:
+  n_rounds: 3
+
+mcts:
+  n_iterations: 20
+  n_rollouts: 3
+  max_depth: 3
+  n_children: 3
+  rollout_length: 64
+
+# ── 스윕 범위 (붕괴 지점 탐색) ──
+sweep:
+  ctx_list: [512, 1024, 2048, 4096, 8192]
+  gen_list: [64, 128, 256, 512, 1024]
+  eviction_topk_list: [64, 128, 256, 512]
+  eviction_window_list: [16, 32, 64, 128]
+  eviction_freq_list: [1, 2, 4, 8]
+  # ToT/Debate/MCTS 강도 스윕
+  tot_depth_list: [1, 2, 3, 4]
+  tot_proposals_list: [2, 3, 5]
+  debate_rounds_list: [1, 2, 3, 5]
+  mcts_iterations_list: [5, 10, 20, 50]
+  mcts_rollouts_list: [1, 3, 5, 10]
+

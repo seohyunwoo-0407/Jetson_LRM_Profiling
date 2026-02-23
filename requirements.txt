@@ -1,0 +1,33 @@
+# ═══════════════════════════════════════════════════════════
+# Jetson LRM Profiling — Requirements
+# Target: Jetson AGX Orin 64GB, JetPack 6.2.1, CUDA 12.6
+# ═══════════════════════════════════════════════════════════
+
+# ── PyTorch (JetPack 6.x wheel — 수동 설치 또는 jetson-containers 사용) ──
+# pip3 install --no-cache https://developer.download.nvidia.com/compute/redist/jp/v60/pytorch/...
+# torch>=2.3.0  # JetPack 6.2 compatible — 이미 시스템에 설치되어 있다고 가정
+
+# ── HuggingFace ──
+transformers>=4.40.0
+tokenizers>=0.19.0
+accelerate>=0.30.0
+safetensors>=0.4.0
+
+# ── 수치/과학 ──
+numpy>=1.24.0
+scipy>=1.10.0
+
+# ── 유틸 ──
+tqdm>=4.65.0
+pyyaml>=6.0
+psutil>=5.9.0
+
+# ── (선택) 시각화 / 분석 ──
+matplotlib>=3.7.0
+pandas>=2.0.0
+seaborn>=0.12.0
+
+# ── (선택) Jupyter 분석 ──
+# jupyterlab>=4.0.0
+# ipywidgets>=8.0.0
+
