@@ -16,9 +16,36 @@ from common.metrics import MetricsCollector
 from common.generation import generate_with_profiling
 
 DEFAULT_PROMPT = (
-    "Explain step-by-step how to solve the following problem: "
-    "A farmer has 17 sheep. All but 9 die. How many sheep are left? "
-    "Think carefully and show your reasoning."
+    "You are an expert mathematician and logician. Solve the following complex problem step by step, "
+    "showing all intermediate calculations and logical reasoning:
+
+"
+    "A company is planning to expand its operations across three cities: City A, City B, and City C. "
+    "The initial investment required is $2.5 million. City A requires 40% of the total investment, "
+    "City B requires 35% of the remaining amount after City A's investment, and City C requires the rest.
+
+"
+    "Additionally, the company must account for operational costs: City A has monthly costs of $15,000, "
+    "City B has monthly costs that are 20% higher than City A, and City C has monthly costs that are "
+    "the average of City A and City B combined.
+
+"
+    "Questions to answer:
+"
+    "1. Calculate the exact investment amount for each city.
+"
+    "2. Calculate the monthly operational costs for each city.
+"
+    "3. If the company expects to break even after 18 months of operation, what should be the minimum "
+    "monthly revenue per city?
+"
+    "4. Considering that City B has a 15% higher revenue potential than City A, and City C has a "
+    "revenue potential that is 80% of the average of City A and City B, determine the optimal "
+    "revenue distribution strategy.
+
+"
+    "Show all your work, explain each step clearly, and verify your calculations. Consider edge cases "
+    "and potential risks in your analysis."
 )
 
 

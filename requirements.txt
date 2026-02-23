@@ -1,6 +1,8 @@
 # ═══════════════════════════════════════════════════════════
 # Jetson LRM Profiling — Requirements
 # Target: Jetson AGX Orin 64GB, JetPack 6.2.1, CUDA 12.6
+# Python: 3.10 또는 3.11 (권장)
+# python_requires=">=3.10,<3.12"
 # ═══════════════════════════════════════════════════════════
 
 # ── PyTorch (JetPack 6.x wheel — 수동 설치 또는 jetson-containers 사용) ──
