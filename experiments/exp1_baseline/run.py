@@ -105,7 +105,12 @@ def main():
     # 디코딩 결과 출력
     decoded_text = tokenizer.decode(all_ids[0], skip_special_tokens=True)
     print(f"\n[Exp1] Generated ({len(all_ids[0]) - input_ids.shape[1]} tokens):")
-    print(decoded_text[:500])
+    print(decoded_text)
+
+    prompt_len = input_ids.shape[1]
+    generated_text = tokenizer.decode(all_ids[0][prompt_len:], skip_special_tokens=True)
+    print(f"\n[Exp1] Generated text:")
+    print(generated_text)
 
 
 if __name__ == "__main__":

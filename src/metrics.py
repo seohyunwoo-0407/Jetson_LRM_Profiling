@@ -119,12 +119,13 @@ class MetricsCollector:
             json.dump(agg, f, indent=2, ensure_ascii=False)
         print(f"[MetricsCollector] Saved → {out_path}")
 
-        # 개별 repeat 저장
+        # 개별 repeat + KV timeline 저장
         detail_path = self.output_dir / fname.replace(".json", "_detail.json")
         with open(detail_path, "w") as f:
             json.dump({
                 "repeat_summaries": self.repeat_summaries,
                 "eviction_overheads": self.eviction_overheads,
+                "kv_bytes_timeline": self.kv_bytes_timeline,
             }, f, indent=2, ensure_ascii=False)
         print(f"[MetricsCollector] Detail saved → {detail_path}")
         return agg
