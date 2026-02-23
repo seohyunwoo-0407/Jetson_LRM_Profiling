@@ -66,6 +66,15 @@ python3 experiments/exp1_baseline/run.py \
     --repeats 5 \
     --tegrastats
 ```
+prefill_latency -> prefil 과정 걸리는 시간 (밀리초)
+
+decode_(p50, p95, p99)_ms -> per-token decoding latency 분포의 percentage  (토큰 하나 생성하는데 걸린 시간 (밀리초) ) -> 200 나오면 0.2s마다 1토큰 -> 5tokens/s 라는 뜻
+
+tokens_per_sec->초당 생성 토큰 수
+
+peak_kv_bytes_mean -> kv cache peak memory
+
+tegrastats 로 잴 수 있는것 -> RAM 사용량, free memory, EMC 메모리 컨트롤러 사용률, GR3D(GPU)사용률, 온도, 전력
 
 ### 3. 전체 8실험 한번에 실행
 
